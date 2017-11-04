@@ -6,7 +6,11 @@ const
   crypto = require('crypto'),
   express = require('express'),
   https = require('https'),
-  request = require('request');
+  request = require('request'),
+  help = require('./messageTree/help'),
+  map = require('./messageTree/map'),
+  helper = require('./messageTree/helper');
+
 
 var app = express();
 app.set('port', config.port);
@@ -105,12 +109,10 @@ app.post('/webhook', function (req, res) {
     res.sendStatus(200);
     // entries from multiple pages may be batched in one request
     data.entry.forEach(function(pageEntry) {
-
         // iterate over each messaging event for this page
         pageEntry.messaging.forEach(function(messagingEvent) {
           let propertyNames = Object.keys(messagingEvent);
           console.log("[app.post] Webhook event props: ", propertyNames.join());
-
           if (messagingEvent.message) {
             processMessageFromPage(messagingEvent);
           } else if (messagingEvent.postback) {
@@ -119,11 +121,8 @@ app.post('/webhook', function (req, res) {
           } else {
             console.log("[app.post] not prepared to handle this message type.");
           }
-
         });
       });
-
-
   }
 });
 
@@ -186,55 +185,16 @@ function processMessageFromPage(event) {
         case 'help':
         case 'start':
           // handle 'help' as a special case
-          sendHelpOptionsAsQuickReplies(senderID);
+          help.sendHelpOptionsAsQuickReplies(senderID);
           break;
-
+        case 'show map':
+          map.sendMapOptionsAsQuickReplies(senderID);
         default:
           // otherwise, just echo it back to the sender
-          sendTextMessage(senderID, "sorry, we cannot find " + messageText);
+          sendTextMessage(senderID, messageText);
       }
     }
   }
-}
-
-
-/*
- * Send a message with the four Quick Reply buttons
- *
- */
-function sendHelpOptionsAsQuickReplies(recipientId) {
-  console.log("[sendHelpOptionsAsQuickReplies] Sending help options menu");
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },
-    message: {
-      text: "Select a feature to learn more.",
-      quick_replies: [
-        {
-          "content_type":"text",
-          "title":"Rotation",
-          "payload":"QR_ROTATION_1"
-        },
-        {
-          "content_type":"text",
-          "title":"Photo",
-          "payload":"QR_PHOTO_1"
-        },
-        {
-          "content_type":"text",
-          "title":"Caption",
-          "payload":"QR_CAPTION_1"
-        },
-        {
-          "content_type":"text",
-          "title":"Background",
-          "payload":"QR_BACKGROUND_1"
-        }
-      ]
-    }
-  };
-  callSendAPI(messageData);
 }
 
 /*
@@ -272,7 +232,7 @@ function respondToHelpRequest(senderID, payload) {
     messageData = getImageAttachments(senderID, payload);
   }
 
-  callSendAPI(messageData);
+  helper.callSendAPI(messageData);
 }
 
 
@@ -303,7 +263,7 @@ function getGenericTemplates(recipientId, requestForHelpOnFeature) {
   // This provides the user with maximum flexibility to navigate
 
   switch (requestForHelpOnFeature) {
-    case 'QR_ROTATION_1':
+    case 'HELP':
       addSectionButton('Photo', 'QR_PHOTO_1');
       addSectionButton('Caption', 'QR_CAPTION_1');
       addSectionButton('Background', 'QR_BACKGROUND_1');
@@ -654,37 +614,7 @@ function sendTextMessage(recipientId, messageText) {
     }
   };
   console.log("[sendTextMessage] %s", JSON.stringify(messageData));
-  callSendAPI(messageData);
-}
-
-/*
- * Call the Send API. If the call succeeds, the
- * message id is returned in the response.
- *
- */
-function callSendAPI(messageData) {
-  request({
-    uri: 'https://graph.facebook.com/v2.6/me/messages',
-    qs: { access_token: PAGE_ACCESS_TOKEN },
-    method: 'POST',
-    json: messageData
-
-  }, function (error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var recipientId = body.recipient_id;
-      var messageId = body.message_id;
-
-      if (messageId) {
-        console.log("[callSendAPI] message id %s sent to recipient %s",
-          messageId, recipientId);
-      } else {
-        console.log("[callSendAPI] called Send API for recipient %s",
-          recipientId);
-      }
-    } else {
-      console.error("[callSendAPI] Send API call failed", response.statusCode, response.statusMessage, body.error);
-    }
-  });
+  helper.callSendAPI(messageData);
 }
 
 /*
