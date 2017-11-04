@@ -253,7 +253,7 @@ function getGenericTemplates(recipientId, requestForHelpOnFeature) {
   // This provides the user with maximum flexibility to navigate
 
   switch (requestForHelpOnFeature) {
-    case 'HELP':
+    case 'FIND':
       addSectionButton('Photo', 'QR_PHOTO_1');
       addSectionButton('Caption', 'QR_CAPTION_1');
       addSectionButton('Background', 'QR_BACKGROUND_1');
