@@ -175,6 +175,7 @@ function processMessageFromPage(event) {
     var lowerCaseMsg = messageText.toLowerCase();
     switch (lowerCaseMsg) {
       case 'help':
+      case 'start':
         // handle 'help' as a special case
         sendHelpOptionsAsQuickReplies(senderID);
         break;
