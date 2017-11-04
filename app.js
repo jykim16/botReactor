@@ -198,26 +198,26 @@ function sendHelpOptionsAsQuickReplies(recipientId) {
       id: recipientId
     },
     message: {
-      text: "Select a feature to learn more.",
+      text: "Select an option:",
       quick_replies: [
         {
           "content_type":"text",
-          "title":"Rotation",
+          "title":"Find",
           "payload":"QR_ROTATION_1"
         },
         {
           "content_type":"text",
-          "title":"Photo",
+          "title":"Show Store Map",
           "payload":"QR_PHOTO_1"
         },
         {
           "content_type":"text",
-          "title":"Caption",
+          "title":"Top 10 Searches",
           "payload":"QR_CAPTION_1"
         },
         {
           "content_type":"text",
-          "title":"Background",
+          "title":"Request Employee",
           "payload":"QR_BACKGROUND_1"
         }
       ]
