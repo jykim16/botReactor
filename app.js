@@ -17,9 +17,13 @@ app.set('port', config.port);
 app.set('view engine', 'ejs');
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(express.static('public'));
+var allItems = require('./fakeData/fakeData00.js');
+
+console.log('THIS IS ALL ITEMS ', allItems);
 
 // App Dashboard > Dashboard > click the Show button in the App Secret field
 const APP_SECRET = config.appSecret;
+
 
 // App Dashboard > Webhooks > Edit Subscription > copy whatever random value you decide to use in the Verify Token field
 const VALIDATION_TOKEN = config.validationToken;
@@ -172,17 +176,23 @@ function processMessageFromPage(event) {
   if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();
-    switch (lowerCaseMsg) {
-      case 'help':
-      case 'start':
-        // handle 'help' as a special case
-        help.sendHelpOptionsAsQuickReplies(senderID);
-        break;
-      case 'show map':
-        map.sendMapOptionsAsQuickReplies(senderID);
-      default:
-        // otherwise, just echo it back to the sender
-        sendTextMessage(senderID, messageText);
+
+    if (allItems.hasOwnProperty(lowerCaseMsg)) {
+      var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
+      sendTextMessage(senderID, reply);
+    } else {
+      switch (lowerCaseMsg) {
+        case 'help':
+        case 'start':
+          // handle 'help' as a special case
+          help.sendHelpOptionsAsQuickReplies(senderID);
+          break;
+        case 'show map':
+          map.sendMapOptionsAsQuickReplies(senderID);
+        default:
+          // otherwise, just echo it back to the sender
+          sendTextMessage(senderID, messageText);
+      }
     }
   }
 }
