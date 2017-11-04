@@ -181,18 +181,18 @@ function processMessageFromPage(event) {
     if (allItems.hasOwnProperty(lowerCaseMsg)) {
       var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
       sendTextMessage(senderID, reply);
-    }
+    } else {
+      switch (lowerCaseMsg) {
+        case 'help':
+        case 'start':
+          // handle 'help' as a special case
+          sendHelpOptionsAsQuickReplies(senderID);
+          break;
 
-    switch (lowerCaseMsg) {
-      case 'help':
-      case 'start':
-        // handle 'help' as a special case
-        sendHelpOptionsAsQuickReplies(senderID);
-        break;
-
-      // default:
-      //   otherwise, just echo it back to the sender
-      //   sendTextMessage(senderID, "please try again");
+        default:
+          // otherwise, just echo it back to the sender
+          sendTextMessage(senderID, "sorry, we cannot find " + messageText);
+      }
     }
   }
 }
