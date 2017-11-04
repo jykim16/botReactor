@@ -8,6 +8,7 @@ const
   https = require('https'),
   request = require('request'),
   help = require('./messageTree/help'),
+  map = require('./messageTree/map'),
   helper = require('./messageTree/helper');
 
 
@@ -177,7 +178,8 @@ function processMessageFromPage(event) {
         // handle 'help' as a special case
         help.sendHelpOptionsAsQuickReplies(senderID);
         break;
-
+      case 'show map':
+        map.sendMapOptionsAsQuickReplies(senderID);
       default:
         // otherwise, just echo it back to the sender
         sendTextMessage(senderID, messageText);
