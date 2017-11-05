@@ -28,7 +28,11 @@ module.exports = products = {
 
 	'sony' : {
 		categories: ['tv', 'speakers', 'computer'],
-		inStock: false
+		inStock: {
+			'tv': false,
+			'speaker': true,
+			'computer': true,
+		}
 	},
 	'samsung': {
 		categories: ['tv', 'cellphone'],
