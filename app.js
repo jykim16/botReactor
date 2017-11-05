@@ -19,6 +19,7 @@ var countWord = {};
 var userState = {};
 
 const showTopTen = require('./messageTree/showTopTen');
+const emailToMySelf = require('./messageTree/email');
 var topTenWords = [];
 
 
@@ -160,8 +161,8 @@ app.post('/webhook', function(req, res) {
           } else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
 
           } else if (messagingEvent.message.quick_reply.payload === 'CALL') {
+            emailToMySelf();
             sendTextMessage(messagingEvent.sender.id, "A target representative has been notified.")
-            //send email to jykim16@gmail.com to take ticket.
           }
           console.log('quick reply: ', messagingEvent.message.quick_reply)
 				} else if (messagingEvent.message) {
