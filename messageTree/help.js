@@ -11,6 +11,7 @@ function sendHelpOptionsAsQuickReplies(recipientId) {
     },
     message: {
       text: "Select an option:",
+      message_type: "help",
       quick_replies: [
         {
           "content_type":"text",

@@ -11,6 +11,7 @@ function sendMapOptionsAsQuickReplies(recipientId) {
     },
     message: {
       text: "Here is the image:",
+      message_type: "map",
       quick_replies: [
         {
           "content_type":"text",

@@ -115,9 +115,6 @@ app.post('/webhook', function (req, res) {
           console.log("[app.post] Webhook event props: ", propertyNames.join());
           if (messagingEvent.message) {
             processMessageFromPage(messagingEvent);
-          } else if (messagingEvent.postback) {
-            // user replied by tapping a postback button
-            processPostbackMessage(messagingEvent);
           } else {
             console.log("[app.post] not prepared to handle this message type.");
           }
@@ -125,30 +122,6 @@ app.post('/webhook', function (req, res) {
       });
   }
 });
-
-/*
- * called when a postback button is tapped
- * ie. buttons in structured messages and the Get Started button
- *
- * https://developers.facebook.com/docs/messenger-platform/webhook-reference/postback-received
- *
- */
-function processPostbackMessage(event) {
-  var senderID = event.sender.id;
-  var recipientID = event.recipient.id;
-  var timeOfPostback = event.timestamp;
-
-  // the developer-defined field you set when you create postback buttons
-  var payload = event.postback.payload;
-
-  console.log("[processPostbackMessage] from user (%d) " +
-    "on page (%d) " +
-    "with payload ('%s') " +
-    "at (%d)",
-    senderID, recipientID, payload, timeOfPostback);
-
-  respondToHelpRequest(senderID, payload);
-}
 
 /*
  * Called when a message is sent to your page.
@@ -162,14 +135,6 @@ function processMessageFromPage(event) {
 
   console.log("[processMessageFromPage] user (%d) page (%d) timestamp (%d) and message (%s)",
     senderID, pageID, timeOfMessage, JSON.stringify(message));
-
-  if (message.quick_reply) {
-    console.log("[processMessageFromPage] quick_reply.payload (%s)",
-      message.quick_reply.payload);
-    handleQuickReplyResponse(event);
-    return;
-  }
-
   // the 'message' object format can vary depending on the kind of message that was received.
   // See: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
   var messageText = message.text;
@@ -180,38 +145,17 @@ function processMessageFromPage(event) {
     if (allItems.hasOwnProperty(lowerCaseMsg)) {
       var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
       sendTextMessage(senderID, reply);
-    } else {
-      switch (lowerCaseMsg) {
-        case 'help':
-        case 'start':
-          // handle 'help' as a special case
-          help.sendHelpOptionsAsQuickReplies(senderID);
-          break;
-        case 'show map':
+    } else if (lowerCaseMsg.includes('show map')) {
           map.sendMapOptionsAsQuickReplies(senderID);
-        default:
-          // otherwise, just echo it back to the sender
-          sendTextMessage(senderID, messageText);
-      }
+    } else if (lowerCaseMsg.includes('request employee')) {
+          // map.sendMapOptionsAsQuickReplies(senderID);
+    } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
+          map.sendMapOptionsAsQuickReplies(senderID);
+    } else {
+      // otherwise, just echo it back to the sender
+      help.sendHelpOptionsAsQuickReplies(senderID);
     }
   }
-}
-
-/*
- * user tapped a Quick Reply button; respond with the appropriate content
- *
- */
-function handleQuickReplyResponse(event) {
-  var senderID = event.sender.id;
-  var pageID = event.recipient.id;
-  var message = event.message;
-  var payload = message.quick_reply.payload;
-
-  console.log("[handleQuickReplyResponse] Handling quick reply response (%s) from sender (%d) to page (%d) with message (%s)",
-    payload, senderID, pageID, JSON.stringify(message));
-
-  respondToHelpRequest(senderID, payload);
-
 }
 
 /*
