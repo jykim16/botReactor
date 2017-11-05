@@ -4,41 +4,43 @@
 let itemB = {
   'body care': 'B',
   'shampoo': 'B01',
-  'conditional': 'B02',
+  'conditioner': 'B02',
   'body wash': 'B03',
   'body lotion': 'B04',
 }
 
 let itemC = {
-  'clothings': 'C',
+  'clothes': 'C',
+  'clothing': 'C',
   'shirt': 'C01',
-  'jean': 'C02',
+  'jeans': 'C02',
   'socks': 'C03',
-  'hoddie': 'C04',
+  'shoes': 'CO3',
+  'hoodie': 'C04',
 }
 
 let itemE = {
   'electronics': 'E',
   'tv': 'E01',
-  'speaker': 'E02',
+  'speakers': 'E02',
   'computer': 'E03',
-  'smart phone': 'E04',
+  'cellphone': 'E04',
 }
 
 let itemP = {
   'pet care': 'P',
-  'cat food': 'P01',
+  'cat litter': 'P01',
   'bird food': 'P02',
   'dog food': 'P03',
   'fish food': 'P04',
 }
 
-let itemH = {
-  'home improvment': 'H',
+let itemK = {
+  'kitchen': 'K',
   'dish': 'H01',
   'cup': 'H02',
   'pan': 'H03',
-  'knife': 'H04',
+  'knives': 'H04',
 }
 
 let itemG = {
