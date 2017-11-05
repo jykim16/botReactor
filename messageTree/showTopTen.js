@@ -2,10 +2,6 @@ const helper = require('./helper');
 
 function showTopTen(topTenWords, recipientId) {
 
-  topTenWords = [];
-
-  console.log('herer??');
-
   let str = '';
   for (let i = 0; i < topTenWords.length; i++) {
     str += `${i + 1}. ${topTenWords[i].word} \n`;

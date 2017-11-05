@@ -19,6 +19,8 @@ var countWord = {};
 var userState = {};
 
 const showTopTen = require('./messageTree/showTopTen');
+var topTenWords = [];
+
 
 var app = express();
 app.set('port', config.port);
@@ -242,7 +244,6 @@ function processMessageFromPage(event, payload) {
       } else {
         specifySearch(category, senderID, pageID, messageText);
       }
-
     } else {
       // otherwise, just echo it back to the sender
       client.message(messageText, {})
@@ -254,11 +255,10 @@ function processMessageFromPage(event, payload) {
         console.log('------------------');
         console.log(intent, subject);
         console.log('------------------');
+
         if(intent === 'find product') {
           if (allItems.hasOwnProperty(subject)) {
             var reply = subject + ' can be found at aisle ' + allItems[subject];
-            if (countWord[subject] === undefined) countWord[subject] = 1;
-            else countWord[subject] += 1;
             sendTextMessage(senderID, reply);
           } else {
             var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
@@ -266,21 +266,36 @@ function processMessageFromPage(event, payload) {
           }
         } else if (intent === 'show map') {
           map.sendMapOptionsAsQuickReplies(senderID);
-          if (countWord[intent] === undefined) {countWord[intent] = 1;}
-          else {countWord[intent] += 1;}
         } else if (intent === 'talk to employee') {
           //employee.sendEmployeeOptionsAsQuickReplies(senderID);
         } else if (intent === 'get help') {
           help.sendHelpOptionsAsQuickReplies(senderID);
-          if (countWord[intent] === undefined) {countWord[intent] = 1;}
-          else {countWord[intent] += 1;}
         } else if (intent === 'top 10' || intent === 'top ten') {
-          showTopTen('', senderID);
+          showTopTen(topTenWords, senderID);
         } else {
-          console.log(' here ???????????????');
-          console.log(intent, subject);
           help.sendHelpOptionsAsQuickReplies(senderID);
         }
+
+        // Related to top ten words //////////////////////////////////////
+        if (intent !== 'top ten') {
+          if (intent === 'find product') {
+            if (countWord[subject] === undefined) countWord[subject] = 1;
+            else countWord[subject] += 1;
+          } else {
+            if (countWord[intent] === undefined) countWord[intent] = 1;
+            else countWord[intent] += 1;
+          }
+        }
+
+        topTenWords = Object.keys(countWord).map((key) => {
+          let val = countWord[key];
+          return { word: key, count: val };
+        });
+
+        topTenWords.sort((a, b) => {
+          return b.count - a.count;
+        });
+        ///////////////////////////////////////////////////////////////
       })
       .catch((err)=>{
         console.log('err:', err);
