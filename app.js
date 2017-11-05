@@ -18,6 +18,8 @@ const client = new Wit({
 var countWord = {};
 var userState = {};
 
+const showTopTen = require('./messageTree/showTopTen');
+
 var app = express();
 app.set('port', config.port);
 app.set('view engine', 'ejs');
@@ -249,20 +251,18 @@ function processMessageFromPage(event, payload) {
         let intent = data.entities.intent[0].value;
         let subject = data.entities.message_subject[0].value;
 
+        console.log('------------------');
+        console.log(intent, subject);
+        console.log('------------------');
         if(intent === 'find product') {
           if (allItems.hasOwnProperty(subject)) {
             var reply = subject + ' can be found at aisle ' + allItems[subject];
-
-            if (countWord[subject] === undefined) {
-              countWord[subject] = 1;
-            } else {
-              countWord[subject] += 1;
-            }
+            if (countWord[subject] === undefined) countWord[subject] = 1;
+            else countWord[subject] += 1;
             sendTextMessage(senderID, reply);
-            console.log('countWord: ', countWord)
           } else {
             var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
-            //employee.sendEmployeeOptionsAsQuickReplies(senderID);
+            sendTextMessage(senderID, reply);
           }
         } else if (intent === 'show map') {
           map.sendMapOptionsAsQuickReplies(senderID);
@@ -274,18 +274,16 @@ function processMessageFromPage(event, payload) {
           help.sendHelpOptionsAsQuickReplies(senderID);
           if (countWord[intent] === undefined) {countWord[intent] = 1;}
           else {countWord[intent] += 1;}
-        } else if (intent === 'top 10') {
-          help.sendHelpOptionsAsQuickReplies(senderID);
-        } else if (data.entities.intent[0].value === 'top ten') {
-          help.sendHelpOptionsAsQuickReplies(senderID);
-          if (countWord[intent] === undefined) {countWord[intent] = 1;}
-          else {countWord[intent] += 1;}
+        } else if (intent === 'top 10' || intent === 'top ten') {
+          showTopTen('', senderID);
         } else {
+          console.log(' here ???????????????');
+          console.log(intent, subject);
           help.sendHelpOptionsAsQuickReplies(senderID);
         }
       })
       .catch((err)=>{
-        console.log(err);
+        console.log('err:', err);
         help.sendHelpOptionsAsQuickReplies(senderID);
       });
     }
