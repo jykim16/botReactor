@@ -10,17 +10,17 @@ const bodyParser = require('body-parser'),
 	map = require('./messageTree/map'),
 	helper = require('./messageTree/helper');
 const dashbot = require('dashbot')(config.dashbot).facebook;
-const {Wit, log} = require('node-wit');
+const { Wit, log } = require('node-wit');
 const client = new Wit({
-  accessToken: "RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ",
-  logger: new log.Logger(log.DEBUG) // optional
+	accessToken: 'RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ',
+	logger: new log.Logger(log.DEBUG) // optional
 });
 var countWord = {};
 var userState = {};
 
 const showTopTen = require('./messageTree/showTopTen');
+const emailToMySelf = require('./messageTree/email');
 var topTenWords = [];
-
 
 var app = express();
 app.set('port', config.port);
@@ -81,13 +81,13 @@ function verifyRequestSignature(req, res, buf) {
 	}
 }
 
-var pausedUsers = {}
-app.post('/pause', function (req, res) {
-  const userId = req.body.userId
-  const paused = req.body.paused
-  pausedUsers[userId] = paused
-  res.status(200).send('ok');
-})
+var pausedUsers = {};
+app.post('/pause', function(req, res) {
+	const userId = req.body.userId;
+	const paused = req.body.paused;
+	pausedUsers[userId] = paused;
+	res.status(200).send('ok');
+});
 
 /*
  * Verify that your validation token matches the one that is sent
@@ -113,11 +113,11 @@ app.get('/webhook', function(req, res) {
  * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
  */
 app.post('/webhook', function(req, res) {
-  dashbot.logIncoming(req.body);
+	dashbot.logIncoming(req.body);
 	console.log('message received!');
 	var data = req.body;
 	console.log(JSON.stringify(data));
-  dashbot.logIncoming(req.body);
+	dashbot.logIncoming(req.body);
 	if (data.object == 'page') {
 		// send back a 200 within 20 seconds to avoid timeouts
 		res.sendStatus(200);
@@ -125,176 +125,181 @@ app.post('/webhook', function(req, res) {
 		data.entry.forEach(function(pageEntry) {
 			// iterate over each messaging event for this page
 			pageEntry.messaging.forEach(function(messagingEvent) {
-        if(!pausedUsers[messagingEvent.sender.id]){
-          //handle message if session is not paused for this userId
-          let propertyNames = Object.keys(messagingEvent);
-          console.log('[app.post] Webhook event props: ', propertyNames.join());
-          console.log(messagingEvent)
-          if(userState[messagingEvent.sender.id]){
-            console.log('state is: ', userState[messagingEvent.sender.id])
-            if(userState[messagingEvent.sender.id] === 'FIND') {
-              messagingEvent.message.text = 'Where is ' + messagingEvent.message.text;
-              processMessageFromPage(messagingEvent);
-            } else if (userState[messagingEvent.sender.id] === 'Map') {
-
-            }
-            delete userState[messagingEvent.sender.id];
-          } else if (messagingEvent.message.quick_reply) {
-            if (messagingEvent.message.quick_reply.payload.includes(',')) {
-              processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
-            } else if (messagingEvent.message.quick_reply.payload === 'FIND') {
-              userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
-              sendTextMessage(messagingEvent.sender.id, "What would you like to find?")
-            } else if (messagingEvent.message.quick_reply.payload === 'MAP') {
-              map.sendMapOptionsAsQuickReplies(messagingEvent.sender.id);
-            } else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
-
-            } else if (messagingEvent.message.quick_reply.payload === 'CALL') {
-              sendTextMessage(messagingEvent.sender.id, "A target representative has been notified.")
-              //send email to jykim16@gmail.com to take ticket.
-            }
-            console.log('quick reply: ', messagingEvent.message.quick_reply)
-          } else if (messagingEvent.message) {
-            processMessageFromPage(messagingEvent);
-          } else {
-            console.log('[app.post] not prepared to handle this message type.');
-          }
-        }
+				if (!pausedUsers[messagingEvent.sender.id]) {
+					//handle message if session is not paused for this userId
+					let propertyNames = Object.keys(messagingEvent);
+					console.log('[app.post] Webhook event props: ', propertyNames.join());
+					console.log(messagingEvent);
+					if (userState[messagingEvent.sender.id]) {
+						console.log('state is: ', userState[messagingEvent.sender.id]);
+						if (userState[messagingEvent.sender.id] === 'FIND') {
+							messagingEvent.message.text = 'Where is ' + messagingEvent.message.text;
+							processMessageFromPage(messagingEvent);
+						} else if (userState[messagingEvent.sender.id] === 'Map') {
+						}
+						delete userState[messagingEvent.sender.id];
+					} else if (messagingEvent.message.quick_reply) {
+						if (messagingEvent.message.quick_reply.payload.includes(',')) {
+							processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
+						} else if (messagingEvent.message.quick_reply.payload === 'FIND') {
+							userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
+							sendTextMessage(messagingEvent.sender.id, 'What would you like to find?');
+						} else if (messagingEvent.message.quick_reply.payload === 'MAP') {
+							map.sendMapOptionsAsQuickReplies(messagingEvent.sender.id);
+						} else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
+						} else if (messagingEvent.message.quick_reply.payload === 'CALL') {
+							emailToMySelf();
+							sendTextMessage(messagingEvent.sender.id, 'A target representative has been notified.');
+						}
+						console.log('quick reply: ', messagingEvent.message.quick_reply);
+					} else if (messagingEvent.message) {
+						processMessageFromPage(messagingEvent);
+					} else {
+						console.log('[app.post] not prepared to handle this message type.');
+					}
+				}
 			});
 		});
 	}
 });
 
 function aisleFound(search, senderID, messageText) {
-  var lowerCaseSearch = search.toLowerCase();
-  console.log('im here ', allItems[lowerCaseSearch]);
-  if (messageText) {
-    var reply = messageText + ' ' + search + ' can be found at aisle ' + allItems[lowerCaseSearch];
-  } else {
-    var reply = search + ' can be found at aisle ' + allItems[lowerCaseSearch];
-  }
-  sendTextMessage(senderID, reply);
+	var lowerCaseSearch = search.toLowerCase();
+	console.log('im here ', allItems[lowerCaseSearch]);
+	if (messageText) {
+		var reply = messageText + ' ' + search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+	} else {
+		var reply = search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+	}
+	sendTextMessage(senderID, reply);
 }
 
 function createSearchOptions(categories, senderID, search) {
-  return categories.map(function(category) {
-    var lowerCaseSearch = category.toLowerCase();
-    var reply = search + ',' + category
-    return {
-      "content_type":"text",
-      "title": category,
-      "payload": search + ',' + category
-    }
-  });
+	return categories.map(function(category) {
+		var lowerCaseSearch = category.toLowerCase();
+		var reply = search + ',' + category;
+		return {
+			content_type: 'text',
+			title: category,
+			payload: search + ',' + category
+		};
+	});
 }
 
 function specifySearch(categories, senderID, recipientID, search) {
-  var options = createSearchOptions(categories, senderID, search);
-  console.log("THESE ARE OPTIONS ", options)
-  var messageData = {
-    recipient: {
-      id: senderID
-    },
-    message: {
-      text: "We found these options that may match",
-      message_type: "specify",
-      quick_replies: options
-    }
-  };
-  helper.callSendAPI(messageData);
-};
+	var options = createSearchOptions(categories, senderID, search);
+	console.log('THESE ARE OPTIONS ', options);
+	var messageData = {
+		recipient: {
+			id: senderID
+		},
+		message: {
+			text: 'We found these options that may match',
+			message_type: 'specify',
+			quick_replies: options
+		}
+	};
+	helper.callSendAPI(messageData);
+}
 
 /*
  * Called when a message is sent to your page.
  *
  */
 function processMessageFromPage(event, payload) {
-  var senderID = event.sender.id;
-  var pageID = event.recipient.id;
-  var timeOfMessage = event.timestamp;
-  var message = event.message;
+	var senderID = event.sender.id;
+	var pageID = event.recipient.id;
+	var timeOfMessage = event.timestamp;
+	var message = event.message;
 
-  console.log("[processMessageFromPage] user (%d) page (%d) timestamp (%d) and message (%s)",
-    senderID, pageID, timeOfMessage, JSON.stringify(message));
-  // the 'message' object format can vary depending on the kind of message that was received.
-  // See: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
-  var messageText = message.text;
+	console.log(
+		'[processMessageFromPage] user (%d) page (%d) timestamp (%d) and message (%s)',
+		senderID,
+		pageID,
+		timeOfMessage,
+		JSON.stringify(message)
+	);
+	// the 'message' object format can vary depending on the kind of message that was received.
+	// See: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
+	var messageText = message.text;
 
-  if (payload) {
-    var payloadSplit = payload.split(',')
-    var lowerCaseSearch = payloadSplit[1].toLowerCase();
-    var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
-    sendTextMessage(senderID, reply);
-  } else if (messageText) {
-    console.log("[processMessageFromPage]: %s", messageText);
-    var lowerCaseMsg = messageText.toLowerCase();
-    if (brands.hasOwnProperty(lowerCaseMsg)) {
-      var category = brands[lowerCaseMsg].categories
-      if (category.length === 1) {
-        aisleFound(category[0], senderID, messageText);
-      } else {
-        specifySearch(category, senderID, pageID, messageText);
-      }
-    } else {
-      // otherwise, just echo it back to the sender
-      client.message(messageText, {})
-      .then(data => {
-        console.log('data content in product:', data.entities.intent[0]);
-        let intent = data.entities.intent[0].value;
-        let subject = data.entities.message_subject[0].value;
+	if (payload) {
+		var payloadSplit = payload.split(',');
+		var lowerCaseSearch = payloadSplit[1].toLowerCase();
+		var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
+		sendTextMessage(senderID, reply);
+	} else if (messageText) {
+		console.log('[processMessageFromPage]: %s', messageText);
+		var lowerCaseMsg = messageText.toLowerCase();
+		if (brands.hasOwnProperty(lowerCaseMsg)) {
+			var category = brands[lowerCaseMsg].categories;
+			if (category.length === 1) {
+				aisleFound(category[0], senderID, messageText);
+			} else {
+				specifySearch(category, senderID, pageID, messageText);
+			}
+		} else {
+			// otherwise, just echo it back to the sender
+			client
+				.message(messageText, {})
+				.then(data => {
+					console.log('data content in product:', data.entities.intent[0]);
+					let intent = data.entities.intent[0].value;
+					let subject = data.entities.message_subject[0].value;
 
-        console.log('------------------');
-        console.log(intent, subject);
-        console.log('------------------');
+					console.log('------------------');
+					console.log(intent, subject);
+					console.log('------------------');
 
-        if(intent === 'find product') {
-          if (allItems.hasOwnProperty(subject)) {
-            var reply = subject + ' can be found at aisle ' + allItems[subject];
-            sendTextMessage(senderID, reply);
-          } else {
-            var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
-            sendTextMessage(senderID, reply);
-            //employee.sendEmployeeOptionsAsQuickReplies(senderID);
-          }
-        } else if (intent === 'show map') {
-          map.sendMapOptionsAsQuickReplies(senderID);
-        } else if (intent === 'talk to employee') {
-          //employee.sendEmployeeOptionsAsQuickReplies(senderID);
-        } else if (intent === 'get help') {
-          help.sendHelpOptionsAsQuickReplies(senderID);
-        } else if (intent === 'top 10' || intent === 'top ten') {
-          showTopTen(topTenWords, senderID);
-        } else {
-          help.sendHelpOptionsAsQuickReplies(senderID);
-        }
+					if (intent === 'find product') {
+						if (allItems.hasOwnProperty(subject)) {
+							var reply = subject + ' can be found at aisle ' + allItems[subject];
+							sendTextMessage(senderID, reply);
+						} else {
+							var reply =
+								"I can't seem to find that item. Let me try to get a target representative to help you!";
+							sendTextMessage(senderID, reply);
+							//employee.sendEmployeeOptionsAsQuickReplies(senderID);
+						}
+					} else if (intent === 'show map') {
+						map.sendMapOptionsAsQuickReplies(senderID);
+					} else if (intent === 'talk to employee') {
+						//employee.sendEmployeeOptionsAsQuickReplies(senderID);
+					} else if (intent === 'get help') {
+						help.sendHelpOptionsAsQuickReplies(senderID);
+					} else if (intent === 'top 10' || intent === 'top ten') {
+						showTopTen(topTenWords, senderID);
+					} else {
+						help.sendHelpOptionsAsQuickReplies(senderID);
+					}
 
-        // Related to top ten words //////////////////////////////////////
-        if (intent !== 'top ten') {
-          if (intent === 'find product') {
-            if (countWord[subject] === undefined) countWord[subject] = 1;
-            else countWord[subject] += 1;
-          } else {
-            if (countWord[intent] === undefined) countWord[intent] = 1;
-            else countWord[intent] += 1;
-          }
-        }
+					// Related to top ten words //////////////////////////////////////
+					if (intent !== 'top ten') {
+						if (intent === 'find product') {
+							if (countWord[subject] === undefined) countWord[subject] = 1;
+							else countWord[subject] += 1;
+						} else {
+							if (countWord[intent] === undefined) countWord[intent] = 1;
+							else countWord[intent] += 1;
+						}
+					}
 
-        topTenWords = Object.keys(countWord).map((key) => {
-          let val = countWord[key];
-          return { word: key, count: val };
-        });
+					topTenWords = Object.keys(countWord).map(key => {
+						let val = countWord[key];
+						return { word: key, count: val };
+					});
 
-        topTenWords.sort((a, b) => {
-          return b.count - a.count;
-        });
-        ///////////////////////////////////////////////////////////////
-      })
-      .catch((err)=>{
-        console.log('err:', err);
-        help.sendHelpOptionsAsQuickReplies(senderID);
-      });
-    }
-  }
+					topTenWords.sort((a, b) => {
+						return b.count - a.count;
+					});
+					///////////////////////////////////////////////////////////////
+				})
+				.catch(err => {
+					console.log('err:', err);
+					help.sendHelpOptionsAsQuickReplies(senderID);
+				});
+		}
+	}
 }
 
 /*
