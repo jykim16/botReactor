@@ -18,9 +18,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(express.static('public'));
 var allItems = require('./fakeData/fakeData00.js');
-
-console.log('THIS IS ALL ITEMS ', allItems);
-
+var brands = require('./fakeData/brandItems.js');
 // App Dashboard > Dashboard > click the Show button in the App Secret field
 const APP_SECRET = config.appSecret;
 
@@ -102,8 +100,7 @@ app.get('/webhook', function(req, res) {
 app.post('/webhook', function (req, res) {
   console.log("message received!");
   var data = req.body;
-  console.log(JSON.stringify(data));
-
+  // console.log(JSON.stringify(data));
   if (data.object == 'page') {
     // send back a 200 within 20 seconds to avoid timeouts
     res.sendStatus(200);
@@ -112,22 +109,64 @@ app.post('/webhook', function (req, res) {
         // iterate over each messaging event for this page
         pageEntry.messaging.forEach(function(messagingEvent) {
           let propertyNames = Object.keys(messagingEvent);
-          console.log("[app.post] Webhook event props: ", propertyNames.join());
-          if (messagingEvent.message) {
+          // console.log("[app.post] Webhook event props: ", propertyNames.join());
+          console.log('messaging event ', messagingEvent)
+          if (messagingEvent.message.quick_reply) {
+            processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
+          } else if (messagingEvent.message) {
             processMessageFromPage(messagingEvent);
           } else {
-            console.log("[app.post] not prepared to handle this message type.");
+            // console.log("[app.post] not prepared to handle this message type.");
           }
         });
       });
   }
 });
 
+function aisleFound(search, senderID, messageText) {
+  var lowerCaseSearch = search.toLowerCase();
+  console.log('im here ', allItems[lowerCaseSearch]);
+  if (messageText) {
+    var reply = messageText + ' ' + search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+  } else {
+    var reply = search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+  }
+  sendTextMessage(senderID, reply);
+}
+
+function createSearchOptions(categories, senderID, search) {
+  return categories.map(function(category) {
+    var lowerCaseSearch = category.toLowerCase();
+    var reply = search + ',' + category
+    return {
+      "content_type":"text",
+      "title": category,
+      "payload": search + ',' + category
+    }
+  });
+}
+
+function specifySearch(categories, senderID, recipientID, search) {
+  var options = createSearchOptions(categories, senderID, search);
+  console.log("THESE ARE OPTIONS ", options)
+  var messageData = {
+    recipient: {
+      id: senderID
+    },
+    message: {
+      text: "We found these options that may match",
+      message_type: "specify",
+      quick_replies: options
+    }
+  };
+  helper.callSendAPI(messageData);
+};
+
 /*
  * Called when a message is sent to your page.
  *
  */
-function processMessageFromPage(event) {
+function processMessageFromPage(event, payload) {
   var senderID = event.sender.id;
   var pageID = event.recipient.id;
   var timeOfMessage = event.timestamp;
@@ -138,13 +177,29 @@ function processMessageFromPage(event) {
   // the 'message' object format can vary depending on the kind of message that was received.
   // See: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
   var messageText = message.text;
-  if (messageText) {
+
+  if (payload) {
+    var payloadSplit = payload.split(',')
+    var lowerCaseSearch = payloadSplit[1].toLowerCase();
+    var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
+    sendTextMessage(senderID, reply);
+  } else if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();
 
     if (allItems.hasOwnProperty(lowerCaseMsg)) {
-      var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
-      sendTextMessage(senderID, reply);
+      
+      aisleFound(messageText, senderID);
+    
+    } else if (brands.hasOwnProperty(lowerCaseMsg)) {
+      
+      var category = brands[lowerCaseMsg].categories
+      if (category.length === 1) {
+        aisleFound(category[0], senderID, messageText);
+      } else {
+        specifySearch(category, senderID, pageID, messageText);
+      }
+
     } else if (lowerCaseMsg.includes('show map')) {
           map.sendMapOptionsAsQuickReplies(senderID);
     } else if (lowerCaseMsg.includes('request employee')) {

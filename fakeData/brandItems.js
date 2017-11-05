@@ -11,7 +11,7 @@ module.exports = products = {
 	},
 
 	'nike' : {
-		categories: ['socks']
+		categories: ['socks', 'shoes']
 	},
 	'levi' : {
 		categories: ['jeans']
