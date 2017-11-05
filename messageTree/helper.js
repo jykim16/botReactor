@@ -19,9 +19,9 @@ function callSendAPI(messageData) {
     json: messageData
   }
   request(requestData, function (error, response, body) {
-    dashbot.logOutgoing(requestData, response.body);
 
     if (!error && response.statusCode == 200) {
+      dashbot.logOutgoing(requestData, response.body);
       var recipientId = body.recipient_id;
       var messageId = body.message_id;
 
