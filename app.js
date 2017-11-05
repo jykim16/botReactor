@@ -60,7 +60,7 @@ if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN)) {
  */
 function verifyRequestSignature(req, res, buf) {
 	var signature = req.headers['x-hub-signature'];
-
+  console.log(req.headers, req.body)
 	if (!signature) {
 		// In DEV, log an error. In PROD, throw an error.
 		console.error("Couldn't validate the signature.");
@@ -84,6 +84,7 @@ function verifyRequestSignature(req, res, buf) {
 
 var pausedUsers = {};
 app.post('/pause', function(req, res) {
+  console.log('pause: ', req.body)
 	const userId = req.body.userId;
 	const paused = req.body.paused;
 	pausedUsers[userId] = paused;
@@ -119,6 +120,9 @@ app.post('/webhook', function(req, res) {
 	var data = req.body;
 	console.log(JSON.stringify(data));
 	dashbot.logIncoming(req.body);
+  if (data.text) {
+    sendTextMessage(data.userId, data.text);
+  }
 	if (data.object == 'page') {
 		// send back a 200 within 20 seconds to avoid timeouts
 		res.sendStatus(200);
@@ -157,7 +161,7 @@ app.post('/webhook', function(req, res) {
 						} else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
 						} else if (messagingEvent.message.quick_reply.payload === 'CALL') {
               emailToMySelf();
-              sendTextWithTwilio();
+              sendTextWithTwilio("A customer needs your help. Please click the link below to chat with client");
 							sendTextMessage(messagingEvent.sender.id, 'A target representative has been notified.');
 						}
 						console.log('quick reply: ', messagingEvent.message.quick_reply);
@@ -305,13 +309,20 @@ function processMessageFromPage(event, payload) {
 						} else {
 							var reply =
 								"I can't seem to find that item. Let me try to get a target representative to help you!";
-							sendTextMessage(senderID, reply);
+              sendTextMessage(senderID, reply);
+              emailToMySelf();
+              sendTextWithTwilio("A customer cannot find an item. Please click the link below to chat with client");
+
 							//employee.sendEmployeeOptionsAsQuickReplies(senderID);
 						}
 					} else if (intent === 'show map') {
 						map.sendMapOptionsAsQuickReplies(senderID);
 					} else if (intent === 'talk to employee') {
+
+            sendTextMessage(senderID, 'A target representative has been notified.');
 						//employee.sendEmployeeOptionsAsQuickReplies(senderID);
+						emailToMySelf();
+            sendTextWithTwilio("A customer would like to speak with you. Please click the link below to chat with client");
 					} else if (intent === 'get help') {
 						help.sendHelpOptionsAsQuickReplies(senderID);
 					} else if (intent === 'top 10' || intent === 'top ten') {
