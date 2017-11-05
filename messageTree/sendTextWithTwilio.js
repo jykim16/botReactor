@@ -12,17 +12,16 @@ const from = config.twilioFromPhoneNum;
 const client = require('twilio')(accountSid, authToken);
 
 
-module.exports = function () {
+module.exports = function (input) {
   client.messages
     .create({
       // to: '+13143153242',
       // from: '+13143092712',
       to,
       from,
-      body: `Customer need your help. Please click the link below to chat with client \n
+      body: `${input} \n
       ${dashBotLiveLink}`,
     })
     .then((message) => console.log('msg:', message.sid))
     .catch((err) => console.log('err', err));
 }
-  

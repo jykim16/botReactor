@@ -154,7 +154,7 @@ app.post('/webhook', function(req, res) {
 						} else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
 						} else if (messagingEvent.message.quick_reply.payload === 'CALL') {
               emailToMySelf();
-              sendTextWithTwilio();
+              sendTextWithTwilio("A customer needs your help. Please click the link below to chat with client");
 							sendTextMessage(messagingEvent.sender.id, 'A target representative has been notified.');
 						}
 						console.log('quick reply: ', messagingEvent.message.quick_reply);
@@ -266,6 +266,8 @@ function processMessageFromPage(event, payload) {
 								"I can't seem to find that item. Let me try to get a target representative to help you!";
               sendTextMessage(senderID, reply);
               emailToMySelf();
+              sendTextWithTwilio("A customer cannot find an item. Please click the link below to chat with client");
+
 							//employee.sendEmployeeOptionsAsQuickReplies(senderID);
 						}
 					} else if (intent === 'show map') {
@@ -275,6 +277,7 @@ function processMessageFromPage(event, payload) {
             sendTextMessage(senderID, 'A target representative has been notified.');
 						//employee.sendEmployeeOptionsAsQuickReplies(senderID);
 						emailToMySelf();
+            sendTextWithTwilio("A customer would like to speak with you. Please click the link below to chat with client");
 					} else if (intent === 'get help') {
 						help.sendHelpOptionsAsQuickReplies(senderID);
 					} else if (intent === 'top 10' || intent === 'top ten') {
