@@ -4,36 +4,15 @@ const helper = require('./helper');
  *
  */
 function sendMapOptionsAsQuickReplies(recipientId) {
-  console.log("[sendHelpOptionsAsQuickReplies] Sending help options menu");
   var messageData = {
     recipient: {
       id: recipientId
     },
     message: {
-      text: "Here is the image:",
-      message_type: "map",
-      quick_replies: [
-        {
-          "content_type":"text",
-          "title":"Find",
-          "payload":"FIND"
-        },
-        {
-          "content_type":"text",
-          "title":"Show Store Map",
-          "payload":"MAP"
-        },
-        {
-          "content_type":"text",
-          "title":"Top 10 Searches",
-          "payload":"TOPTEN"
-        },
-        {
-          "content_type":"text",
-          "title":"Request Employee",
-          "payload":"CALL"
-        }
-      ]
+      attachment: {
+        type: 'Image',
+        payload: { url: 'http://blackfridaymagazine.com/wp-content/uploads/2013/11/1884.jpg' }
+      }
     }
   };
   helper.callSendAPI(messageData);
