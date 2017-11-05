@@ -145,12 +145,12 @@ function processMessageFromPage(event) {
     if (allItems.hasOwnProperty(lowerCaseMsg)) {
       var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
       sendTextMessage(senderID, reply);
-    } else if (lowerCaseMsg.includes('show map')) {
+    } else if (lowerCaseMsg.includes('map')) {
           map.sendMapOptionsAsQuickReplies(senderID);
     } else if (lowerCaseMsg.includes('request employee')) {
           // map.sendMapOptionsAsQuickReplies(senderID);
     } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
-          map.sendMapOptionsAsQuickReplies(senderID);
+          // map.sendMapOptionsAsQuickReplies(senderID);
     } else {
       // otherwise, just echo it back to the sender
       help.sendHelpOptionsAsQuickReplies(senderID);
