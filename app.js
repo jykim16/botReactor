@@ -24,10 +24,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(express.static('public'));
 var allItems = require('./fakeData/fakeData00.js');
-var countWord = {};
-
-console.log('THIS IS ALL ITEMS ', allItems);
-
+var brands = require('./fakeData/brandItems.js');
 // App Dashboard > Dashboard > click the Show button in the App Secret field
 const APP_SECRET = config.appSecret;
 
@@ -149,7 +146,9 @@ app.post('/webhook', function(req, res) {
           }
           delete userState[messagingEvent.sender.id];
         } else if (messagingEvent.message.quick_reply) {
-          if(messagingEvent.message.quick_reply.payload === 'FIND') {
+          if (messagingEvent.message.quick_reply.payload.includes(',')) {
+            processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
+          } else if (messagingEvent.message.quick_reply.payload === 'FIND') {
             userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
             sendTextMessage(messagingEvent.sender.id, "What would you like to find?")
           } else if (messagingEvent.message.quick_reply.payload === 'MAP') {
@@ -171,11 +170,50 @@ app.post('/webhook', function(req, res) {
 	}
 });
 
+function aisleFound(search, senderID, messageText) {
+  var lowerCaseSearch = search.toLowerCase();
+  console.log('im here ', allItems[lowerCaseSearch]);
+  if (messageText) {
+    var reply = messageText + ' ' + search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+  } else {
+    var reply = search + ' can be found at aisle ' + allItems[lowerCaseSearch];
+  }
+  sendTextMessage(senderID, reply);
+}
+
+function createSearchOptions(categories, senderID, search) {
+  return categories.map(function(category) {
+    var lowerCaseSearch = category.toLowerCase();
+    var reply = search + ',' + category
+    return {
+      "content_type":"text",
+      "title": category,
+      "payload": search + ',' + category
+    }
+  });
+}
+
+function specifySearch(categories, senderID, recipientID, search) {
+  var options = createSearchOptions(categories, senderID, search);
+  console.log("THESE ARE OPTIONS ", options)
+  var messageData = {
+    recipient: {
+      id: senderID
+    },
+    message: {
+      text: "We found these options that may match",
+      message_type: "specify",
+      quick_replies: options
+    }
+  };
+  helper.callSendAPI(messageData);
+};
+
 /*
  * Called when a message is sent to your page.
  *
  */
-function processMessageFromPage(event) {
+function processMessageFromPage(event, payload) {
   var senderID = event.sender.id;
   var pageID = event.recipient.id;
   var timeOfMessage = event.timestamp;
@@ -186,14 +224,39 @@ function processMessageFromPage(event) {
   // the 'message' object format can vary depending on the kind of message that was received.
   // See: https://developers.facebook.com/docs/messenger-platform/webhook-reference/message-received
   var messageText = message.text;
-  if (messageText) {
+
+  if (payload) {
+    var payloadSplit = payload.split(',')
+    var lowerCaseSearch = payloadSplit[1].toLowerCase();
+    var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
+    sendTextMessage(senderID, reply);
+  } else if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();
-    client.message(messageText, {})
-    .then(data => {
-      console.log('data content in product:', data.entities.intent[0])
 
+    if (allItems.hasOwnProperty(lowerCaseMsg)) {
+      
+      aisleFound(messageText, senderID);
+    
+    } else if (brands.hasOwnProperty(lowerCaseMsg)) {
+      
+      var category = brands[lowerCaseMsg].categories
+      if (category.length === 1) {
+        aisleFound(category[0], senderID, messageText);
+      } else {
+        specifySearch(category, senderID, pageID, messageText);
+      }
 
+    } else if (lowerCaseMsg.includes('show map')) {
+          map.sendMapOptionsAsQuickReplies(senderID);
+    } else if (lowerCaseMsg.includes('request employee')) {
+          // map.sendMapOptionsAsQuickReplies(senderID);
+    } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
+          map.sendMapOptionsAsQuickReplies(senderID);
+    } else {
+      // otherwise, just echo it back to the sender
+    client.message(messageText, {}).then(data => {
+      console.log('data content in product:', data.entities.intent[0]);
       let intent = data.entities.intent[0].value;
       let subject = data.entities.message_subject[0].value;
 
@@ -228,21 +291,8 @@ function processMessageFromPage(event) {
     })
     .catch(()=>{
       help.sendHelpOptionsAsQuickReplies(senderID);
-    })
-
-    // if (allItems.hasOwnProperty(lowerCaseMsg)) {
-    //   var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
-    //   sendTextMessage(senderID, reply);
-    // } else if (lowerCaseMsg.includes('map')) {
-    //       map.sendMapOptionsAsQuickReplies(senderID);
-    // } else if (lowerCaseMsg.includes('request employee')) {
-    //       // map.sendMapOptionsAsQuickReplies(senderID);
-    // } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
-    //       // map.sendMapOptionsAsQuickReplies(senderID);
-    // } else {
-    //   // otherwise, just echo it back to the sender
-    //   help.sendHelpOptionsAsQuickReplies(senderID);
-    // }
+    });
+    }
   }
 }
 
