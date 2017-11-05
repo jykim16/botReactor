@@ -10,6 +10,7 @@ const bodyParser = require('body-parser'),
 	map = require('./messageTree/map'),
 	helper = require('./messageTree/helper');
 
+const dashbot = require('dashbot')(config.dashbot).facebook;
 const {Wit, log} = require('node-wit');
 const client = new Wit({
   accessToken: "RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ",
@@ -79,6 +80,14 @@ function verifyRequestSignature(req, res, buf) {
 	}
 }
 
+var pausedUsers = {}
+app.post('/pause', function (req, res) {
+  const userId = req.body.userId
+  const paused = req.body.paused
+  pausedUsers[userId] = paused
+  res.send('ok')
+})
+
 /*
  * Verify that your validation token matches the one that is sent
  * from the App Dashboard during the webhook verification check.
@@ -106,7 +115,20 @@ app.post('/webhook', function(req, res) {
 	console.log('message received!');
 	var data = req.body;
 	console.log(JSON.stringify(data));
-
+  dashbot.logIncoming(req.body);
+  // if(req.body.entry){
+  //   req.body.entry.forEach(function(entry){
+  //     if(entry.messaging){
+  //       entry.messaging.forEach(function(event){
+  //         var recipientId = event.sender.id;
+  //         if(!pausedUsers[recipientId]){
+  //           //handle message if session is not paused for this userId
+  //           [...]
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 	if (data.object == 'page') {
 		// send back a 200 within 20 seconds to avoid timeouts
 		res.sendStatus(200);
