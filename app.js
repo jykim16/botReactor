@@ -9,13 +9,13 @@ const bodyParser = require('body-parser'),
 	help = require('./messageTree/help'),
 	map = require('./messageTree/map'),
 	helper = require('./messageTree/helper');
-
 const dashbot = require('dashbot')(config.dashbot).facebook;
 const {Wit, log} = require('node-wit');
 const client = new Wit({
   accessToken: "RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ",
   logger: new log.Logger(log.DEBUG) // optional
 });
+var countWord = {};
 var userState = {};
 
 var app = express();
@@ -252,14 +252,13 @@ function processMessageFromPage(event, payload) {
         if(intent === 'find product') {
           if (allItems.hasOwnProperty(subject)) {
             var reply = subject + ' can be found at aisle ' + allItems[subject];
-            console.log('reply: ',reply)
-            sendTextMessage(senderID, reply);
 
             if (countWord[subject] === undefined) {
               countWord[subject] = 1;
             } else {
               countWord[subject] += 1;
             }
+            sendTextMessage(senderID, reply);
             console.log('countWord: ', countWord)
           } else {
             var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
@@ -285,7 +284,8 @@ function processMessageFromPage(event, payload) {
           help.sendHelpOptionsAsQuickReplies(senderID);
         }
       })
-      .catch(()=>{
+      .catch((err)=>{
+        console.log(err);
         help.sendHelpOptionsAsQuickReplies(senderID);
       });
     }
