@@ -187,6 +187,10 @@ function specifySearch(categories, senderID, recipientID, search) {
   helper.callSendAPI(messageData);
 };
 
+function outOfStockOptions(senderID) {
+  
+}
+
 /*
  * Called when a message is sent to your page.
  *
@@ -206,8 +210,12 @@ function processMessageFromPage(event, payload) {
   if (payload) {
     var payloadSplit = payload.split(',')
     var lowerCaseSearch = payloadSplit[1].toLowerCase();
-    var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
-    sendTextMessage(senderID, reply);
+    if (!brands[payloadSplit[0]].inStock){
+      sendTextMessage(senderID, 'We\'re out of stock');
+    } else {
+      var reply = payloadSplit[0] + ' ' + payloadSplit[1] + ' can be found at aisle ' + allItems[lowerCaseSearch];
+      sendTextMessage(senderID, reply);
+    }
   } else if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();

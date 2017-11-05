@@ -1,59 +1,75 @@
 
 module.exports = products = {
 	'pantene': {
-		categories: ['shampoo', 'conditioner', 'body wash', 'body lotion']
+		categories: ['shampoo', 'conditioner', 'body wash', 'body lotion'],
+		inStock: true
 	},
 	'dove': {
-		categories: ['shampoo', 'conditioner', 'body wash', 'body lotion']
+		categories: ['shampoo', 'conditioner', 'body wash', 'body lotion'],
+		inStock: true
 	},
 	'axe': {
-		categories: ['shampoo', 'conditioner', 'body wash']
+		categories: ['shampoo', 'conditioner', 'body wash'],
+		inStock: true
 	},
 
 	'nike' : {
-		categories: ['socks', 'shoes']
+		categories: ['socks', 'shoes'],
+		inStock: true
 	},
 	'levi' : {
-		categories: ['jeans']
+		categories: ['jeans'],
+		inStock: true
 	},
 	'hanes' : {
-		categories: ['shirt', 'socks']
+		categories: ['shirt', 'socks'],
+		inStock: true
 	},
 
 	'sony' : {
-		categories: ['tv', 'speakers', 'computer']
+		categories: ['tv', 'speakers', 'computer'],
+		inStock: false
 	},
 	'samsung': {
-		categories: ['tv', 'cellphone']
+		categories: ['tv', 'cellphone'],
+		inStock: true
 	},
 	'apple' : {
-		categories: ['cellphone', 'computer']
+		categories: ['cellphone', 'computer'],
+		inStock: true
 	},
 	
 	'purina': {
-		categories: ['cat food', 'dog food', 'cat litter']
+		categories: ['cat food', 'dog food', 'cat litter'],
+		inStock: true
 	},
 	'tetra': {
-		categories: ['fish food']
+		categories: ['fish food'],
+		inStock: true
 	},
 
 	'rachael ray': {
-		categories: ['cat food', 'dog food', 'dish', 'cup', 'pan', 'knives']
+		categories: ['cat food', 'dog food', 'dish', 'cup', 'pan', 'knives'],
+		inStock: true
 	},
 	
 	'organic valley': {
 		catergoies: ['milk'],
+		inStock: true,
 	},
 
 	'cuties': {
 		categories: ['fruits'],
+		inStock: true,
 	},
 
 	'lean cuisine': {
-		categories: ['frozen food']
+		categories: ['frozen food'],
+		inStock: true
 	},
 
 	'wonder bread': {
-		categories: ['bread']
+		categories: ['bread'],
+		inStock: true
 	}
 }
