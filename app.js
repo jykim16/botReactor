@@ -10,6 +10,12 @@ const bodyParser = require('body-parser'),
 	map = require('./messageTree/map'),
 	helper = require('./messageTree/helper');
 
+const {Wit, log} = require('node-wit');
+const client = new Wit({
+  accessToken: "RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ",
+  logger: new log.Logger(log.DEBUG) // optional
+});
+
 var app = express();
 app.set('port', config.port);
 app.set('view engine', 'ejs');
@@ -123,7 +129,6 @@ app.post('/webhook', function(req, res) {
  *
  */
 function processMessageFromPage(event) {
-<<<<<<< HEAD
   var senderID = event.sender.id;
   var pageID = event.recipient.id;
   var timeOfMessage = event.timestamp;
@@ -137,20 +142,43 @@ function processMessageFromPage(event) {
   if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();
-
-    if (allItems.hasOwnProperty(lowerCaseMsg)) {
-      var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
-      sendTextMessage(senderID, reply);
-    } else if (lowerCaseMsg.includes('map')) {
-          map.sendMapOptionsAsQuickReplies(senderID);
-    } else if (lowerCaseMsg.includes('request employee')) {
-          // map.sendMapOptionsAsQuickReplies(senderID);
-    } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
-          // map.sendMapOptionsAsQuickReplies(senderID);
-    } else {
-      // otherwise, just echo it back to the sender
+    client.message(messageText, {})
+    .then(data => {
+      console.log('data content in product:', data.entities.intent[0])
+      if(data.entities.intent[0].value === 'find product') {
+        if (allItems.hasOwnProperty(data.entities.message_subject[0].value)) {
+          var reply = data.entities.message_subject[0].value + ' can be found at aisle ' + allItems[data.entities.message_subject[0].value];
+          sendTextMessage(senderID, reply);
+        } else {
+          var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
+        }
+      } else if (data.entities.intent[0].value === 'show map') {
+        map.sendMapOptionsAsQuickReplies(senderID);
+      } else if (data.entities.intent[0].value === 'talk to employee') {
+        //employee.sendEmployeeOptionsAsQuickReplies(senderID);
+      } else if (data.entities.intent[0].value === 'get help') {
+        help.sendHelpOptionsAsQuickReplies(senderID);
+      } else {
+        help.sendHelpOptionsAsQuickReplies(senderID);
+      }
+    })
+    .catch(()=>{
       help.sendHelpOptionsAsQuickReplies(senderID);
-    }
+    })
+
+    // if (allItems.hasOwnProperty(lowerCaseMsg)) {
+    //   var reply = messageText + ' can be found at aisle ' + allItems[lowerCaseMsg];
+    //   sendTextMessage(senderID, reply);
+    // } else if (lowerCaseMsg.includes('map')) {
+    //       map.sendMapOptionsAsQuickReplies(senderID);
+    // } else if (lowerCaseMsg.includes('request employee')) {
+    //       // map.sendMapOptionsAsQuickReplies(senderID);
+    // } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
+    //       // map.sendMapOptionsAsQuickReplies(senderID);
+    // } else {
+    //   // otherwise, just echo it back to the sender
+    //   help.sendHelpOptionsAsQuickReplies(senderID);
+    // }
   }
 }
 
