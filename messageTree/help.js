@@ -1,8 +1,8 @@
 const helper = require('./helper');
 /*
  * Send a message with the four Quick Reply buttons
- *
  */
+
 function sendHelpOptionsAsQuickReplies(recipientId) {
   console.log("[sendHelpOptionsAsQuickReplies] Sending help options menu");
   var messageData = {

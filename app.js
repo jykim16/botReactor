@@ -15,6 +15,7 @@ const client = new Wit({
   accessToken: "RYYRXU4TYL7NOTASBBAM46WSQDH5MFTZ",
   logger: new log.Logger(log.DEBUG) // optional
 });
+var userState = {};
 
 var app = express();
 app.set('port', config.port);
@@ -114,9 +115,16 @@ app.post('/webhook', function(req, res) {
 			pageEntry.messaging.forEach(function(messagingEvent) {
 				let propertyNames = Object.keys(messagingEvent);
 				console.log('[app.post] Webhook event props: ', propertyNames.join());
-				if (messagingEvent.message) {
+        console.log(messagingEvent)
+        if(userState[messagingEvent.sender.id]){
+          console.log('state is: ', userState[messagingEvent.sender.id])
+        } else if (messagingEvent.message.quick_reply) {
+          userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
+          if(messagingEvent.message.quick_reply.payload)
+          console.log('quick reply: ', messagingEvent.message.quick_reply)
+				} else if (messagingEvent.message) {
 					processMessageFromPage(messagingEvent);
-				} else {
+        } else {
 					console.log('[app.post] not prepared to handle this message type.');
 				}
 			});
@@ -157,6 +165,8 @@ function processMessageFromPage(event) {
       } else if (data.entities.intent[0].value === 'talk to employee') {
         //employee.sendEmployeeOptionsAsQuickReplies(senderID);
       } else if (data.entities.intent[0].value === 'get help') {
+        help.sendHelpOptionsAsQuickReplies(senderID);
+      } else if (data.entities.intent[0].value === 'top ten') {
         help.sendHelpOptionsAsQuickReplies(senderID);
       } else {
         help.sendHelpOptionsAsQuickReplies(senderID);
