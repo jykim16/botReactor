@@ -180,13 +180,10 @@ function processMessageFromPage(event) {
         else countWord[intent] += 1;
       } else if (intent === 'top 10') {
         help.sendHelpOptionsAsQuickReplies(senderID);
-<<<<<<< HEAD
       } else if (data.entities.intent[0].value === 'top ten') {
         help.sendHelpOptionsAsQuickReplies(senderID);
-=======
         if (countWord[intent] === undefined) countWord[intent] = 1;
         else countWord[intent] += 1;
->>>>>>> Able to count words
       } else {
         help.sendHelpOptionsAsQuickReplies(senderID);
       }
