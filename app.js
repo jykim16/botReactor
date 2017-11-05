@@ -23,6 +23,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(express.static('public'));
 var allItems = require('./fakeData/fakeData00.js');
+var countWord = {};
 
 console.log('THIS IS ALL ITEMS ', allItems);
 
@@ -153,21 +154,39 @@ function processMessageFromPage(event) {
     client.message(messageText, {})
     .then(data => {
       console.log('data content in product:', data.entities.intent[0])
-      if(data.entities.intent[0].value === 'find product') {
-        if (allItems.hasOwnProperty(data.entities.message_subject[0].value)) {
-          var reply = data.entities.message_subject[0].value + ' can be found at aisle ' + allItems[data.entities.message_subject[0].value];
+
+
+      let intent = data.entities.intent[0].value;
+      let subject = data.entities.message_subject[0].value;
+
+      if(intent === 'find product') {
+        if (allItems.hasOwnProperty(subject)) {
+          var reply = subject + ' can be found at aisle ' + allItems[subject];
+          if (countWord[subject] === undefined) countWord[subject] = 1;
+          else countWord[subject] += 1;
           sendTextMessage(senderID, reply);
         } else {
           var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
         }
-      } else if (data.entities.intent[0].value === 'show map') {
+      } else if (intent === 'show map') {
         map.sendMapOptionsAsQuickReplies(senderID);
-      } else if (data.entities.intent[0].value === 'talk to employee') {
+        if (countWord[intent] === undefined) countWord[intent] = 1;
+        else countWord[intent] += 1;
+      } else if (intent === 'talk to employee') {
         //employee.sendEmployeeOptionsAsQuickReplies(senderID);
-      } else if (data.entities.intent[0].value === 'get help') {
+      } else if (intent === 'get help') {
         help.sendHelpOptionsAsQuickReplies(senderID);
+        if (countWord[intent] === undefined) countWord[intent] = 1;
+        else countWord[intent] += 1;
+      } else if (intent === 'top 10') {
+        help.sendHelpOptionsAsQuickReplies(senderID);
+<<<<<<< HEAD
       } else if (data.entities.intent[0].value === 'top ten') {
         help.sendHelpOptionsAsQuickReplies(senderID);
+=======
+        if (countWord[intent] === undefined) countWord[intent] = 1;
+        else countWord[intent] += 1;
+>>>>>>> Able to count words
       } else {
         help.sendHelpOptionsAsQuickReplies(senderID);
       }
