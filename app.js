@@ -233,13 +233,7 @@ function processMessageFromPage(event, payload) {
   } else if (messageText) {
     console.log("[processMessageFromPage]: %s", messageText);
     var lowerCaseMsg = messageText.toLowerCase();
-
-    if (allItems.hasOwnProperty(lowerCaseMsg)) {
-      
-      aisleFound(messageText, senderID);
-    
-    } else if (brands.hasOwnProperty(lowerCaseMsg)) {
-      
+    if (brands.hasOwnProperty(lowerCaseMsg)) {
       var category = brands[lowerCaseMsg].categories
       if (category.length === 1) {
         aisleFound(category[0], senderID, messageText);
@@ -247,51 +241,53 @@ function processMessageFromPage(event, payload) {
         specifySearch(category, senderID, pageID, messageText);
       }
 
-    } else if (lowerCaseMsg.includes('show map')) {
-          map.sendMapOptionsAsQuickReplies(senderID);
-    } else if (lowerCaseMsg.includes('request employee')) {
-          // map.sendMapOptionsAsQuickReplies(senderID);
-    } else if (lowerCaseMsg.includes('top 10') || lowerCaseMsg.includes('top ten')) {
-          map.sendMapOptionsAsQuickReplies(senderID);
     } else {
       // otherwise, just echo it back to the sender
-    client.message(messageText, {}).then(data => {
-      console.log('data content in product:', data.entities.intent[0]);
-      let intent = data.entities.intent[0].value;
-      let subject = data.entities.message_subject[0].value;
+      client.message(messageText, {})
+      .then(data => {
+        console.log('data content in product:', data.entities.intent[0]);
+        let intent = data.entities.intent[0].value;
+        let subject = data.entities.message_subject[0].value;
 
-      if(intent === 'find product') {
-        if (allItems.hasOwnProperty(subject)) {
-          var reply = subject + ' can be found at aisle ' + allItems[subject];
-          if (countWord[subject] === undefined) countWord[subject] = 1;
-          else countWord[subject] += 1;
-          sendTextMessage(senderID, reply);
+        if(intent === 'find product') {
+          if (allItems.hasOwnProperty(subject)) {
+            var reply = subject + ' can be found at aisle ' + allItems[subject];
+            console.log('reply: ',reply)
+            sendTextMessage(senderID, reply);
+
+            if (countWord[subject] === undefined) {
+              countWord[subject] = 1;
+            } else {
+              countWord[subject] += 1;
+            }
+            console.log('countWord: ', countWord)
+          } else {
+            var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
+            //employee.sendEmployeeOptionsAsQuickReplies(senderID);
+          }
+        } else if (intent === 'show map') {
+          map.sendMapOptionsAsQuickReplies(senderID);
+          if (countWord[intent] === undefined) {countWord[intent] = 1;}
+          else {countWord[intent] += 1;}
+        } else if (intent === 'talk to employee') {
+          //employee.sendEmployeeOptionsAsQuickReplies(senderID);
+        } else if (intent === 'get help') {
+          help.sendHelpOptionsAsQuickReplies(senderID);
+          if (countWord[intent] === undefined) {countWord[intent] = 1;}
+          else {countWord[intent] += 1;}
+        } else if (intent === 'top 10') {
+          help.sendHelpOptionsAsQuickReplies(senderID);
+        } else if (data.entities.intent[0].value === 'top ten') {
+          help.sendHelpOptionsAsQuickReplies(senderID);
+          if (countWord[intent] === undefined) {countWord[intent] = 1;}
+          else {countWord[intent] += 1;}
         } else {
-          var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
+          help.sendHelpOptionsAsQuickReplies(senderID);
         }
-      } else if (intent === 'show map') {
-        map.sendMapOptionsAsQuickReplies(senderID);
-        if (countWord[intent] === undefined) countWord[intent] = 1;
-        else countWord[intent] += 1;
-      } else if (intent === 'talk to employee') {
-        //employee.sendEmployeeOptionsAsQuickReplies(senderID);
-      } else if (intent === 'get help') {
+      })
+      .catch(()=>{
         help.sendHelpOptionsAsQuickReplies(senderID);
-        if (countWord[intent] === undefined) countWord[intent] = 1;
-        else countWord[intent] += 1;
-      } else if (intent === 'top 10') {
-        help.sendHelpOptionsAsQuickReplies(senderID);
-      } else if (data.entities.intent[0].value === 'top ten') {
-        help.sendHelpOptionsAsQuickReplies(senderID);
-        if (countWord[intent] === undefined) countWord[intent] = 1;
-        else countWord[intent] += 1;
-      } else {
-        help.sendHelpOptionsAsQuickReplies(senderID);
-      }
-    })
-    .catch(()=>{
-      help.sendHelpOptionsAsQuickReplies(senderID);
-    });
+      });
     }
   }
 }
