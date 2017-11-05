@@ -120,7 +120,9 @@ app.post('/webhook', function(req, res) {
           console.log('state is: ', userState[messagingEvent.sender.id])
         } else if (messagingEvent.message.quick_reply) {
           userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
-          if(messagingEvent.message.quick_reply.payload)
+          if(messagingEvent.message.quick_reply.payload === 'FIND') {
+            sendTextMessage(messagingEvent.sender.id, "What would you like to find?")
+          }
           console.log('quick reply: ', messagingEvent.message.quick_reply)
 				} else if (messagingEvent.message) {
 					processMessageFromPage(messagingEvent);
