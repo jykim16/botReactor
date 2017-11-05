@@ -9,7 +9,8 @@ var data = {
   from: 'Mailgun Sandbox <postmaster@sandboxb60c3c16e89b4fa799793afd053b2ba8.mailgun.org>',
   to: email,
   subject: 'Message from Dashbot',
-  text: dashBotLiveLink
+  text: `Customer need your help. Please click the link below to chat with client \n
+    ${dashBotLiveLink}`
 };
 
 module.exports = function () {

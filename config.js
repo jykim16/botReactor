@@ -15,6 +15,10 @@ const config = {
   mailGunDomain: process.env.MAIL_GUN_DOMAIN,
   yourEmail: process.env.YOUR_OWN_EMAIL,
   yourDashBotLiveLink: process.env.YOUR_DASH_BOT_LIVE_LINK,
+  twilioAccountSid: process.env.twilioAccountSid,
+  twilioAuthToken: process.env.twilioAuthToken,
+  twilioToPhoneNum: process.env.twilioToPhoneNum,
+  twilioFromPhoneNum: process.env.twilioFromPhoneNum,
 }
 
 module.exports = config
