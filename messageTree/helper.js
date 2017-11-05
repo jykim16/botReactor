@@ -1,6 +1,7 @@
 const request = require('request');
 const config = require('../config');
 const PAGE_ACCESS_TOKEN = config.pageAccessToken;
+const dashbot = require('dashbot')(config.dashbot).facebook;
 
 /*
  * Call the Send API. If the call succeeds, the
@@ -11,13 +12,15 @@ const PAGE_ACCESS_TOKEN = config.pageAccessToken;
 function callSendAPI(messageData) {
   delete messageData.message.message_type;
   console.log('callSend: ', messageData)
-  request({
+  var requestData = {
     uri: 'https://graph.facebook.com/v2.6/me/messages',
     qs: { access_token: PAGE_ACCESS_TOKEN },
     method: 'POST',
     json: messageData
+  }
+  request(requestData, function (error, response, body) {
+    dashbot.logOutgoing(requestData, response.body);
 
-  }, function (error, response, body) {
     if (!error && response.statusCode == 200) {
       var recipientId = body.recipient_id;
       var messageId = body.message_id;

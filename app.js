@@ -82,7 +82,7 @@ app.post('/pause', function (req, res) {
   const userId = req.body.userId
   const paused = req.body.paused
   pausedUsers[userId] = paused
-  res.send('ok')
+  res.status(200).send('ok');
 })
 
 /*
@@ -109,23 +109,11 @@ app.get('/webhook', function(req, res) {
  * https://developers.facebook.com/docs/messenger-platform/product-overview/setup#subscribe_app
  */
 app.post('/webhook', function(req, res) {
+  dashbot.logIncoming(req.body);
 	console.log('message received!');
 	var data = req.body;
 	console.log(JSON.stringify(data));
   dashbot.logIncoming(req.body);
-  // if(req.body.entry){
-  //   req.body.entry.forEach(function(entry){
-  //     if(entry.messaging){
-  //       entry.messaging.forEach(function(event){
-  //         var recipientId = event.sender.id;
-  //         if(!pausedUsers[recipientId]){
-  //           //handle message if session is not paused for this userId
-  //           [...]
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
 	if (data.object == 'page') {
 		// send back a 200 within 20 seconds to avoid timeouts
 		res.sendStatus(200);
@@ -133,38 +121,41 @@ app.post('/webhook', function(req, res) {
 		data.entry.forEach(function(pageEntry) {
 			// iterate over each messaging event for this page
 			pageEntry.messaging.forEach(function(messagingEvent) {
-				let propertyNames = Object.keys(messagingEvent);
-				console.log('[app.post] Webhook event props: ', propertyNames.join());
-        console.log(messagingEvent)
-        if(userState[messagingEvent.sender.id]){
-          console.log('state is: ', userState[messagingEvent.sender.id])
-          if(userState[messagingEvent.sender.id] === 'FIND') {
-            messagingEvent.message.text = 'Where is ' + messagingEvent.message.text;
+        if(!pausedUsers[messagingEvent.sender.id]){
+          //handle message if session is not paused for this userId
+          let propertyNames = Object.keys(messagingEvent);
+          console.log('[app.post] Webhook event props: ', propertyNames.join());
+          console.log(messagingEvent)
+          if(userState[messagingEvent.sender.id]){
+            console.log('state is: ', userState[messagingEvent.sender.id])
+            if(userState[messagingEvent.sender.id] === 'FIND') {
+              messagingEvent.message.text = 'Where is ' + messagingEvent.message.text;
+              processMessageFromPage(messagingEvent);
+            } else if (userState[messagingEvent.sender.id] === 'Map') {
+
+            }
+            delete userState[messagingEvent.sender.id];
+          } else if (messagingEvent.message.quick_reply) {
+            if (messagingEvent.message.quick_reply.payload.includes(',')) {
+              processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
+            } else if (messagingEvent.message.quick_reply.payload === 'FIND') {
+              userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
+              sendTextMessage(messagingEvent.sender.id, "What would you like to find?")
+            } else if (messagingEvent.message.quick_reply.payload === 'MAP') {
+              map.sendMapOptionsAsQuickReplies(messagingEvent.sender.id);
+            } else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
+
+            } else if (messagingEvent.message.quick_reply.payload === 'CALL') {
+              sendTextMessage(messagingEvent.sender.id, "A target representative has been notified.")
+              //send email to jykim16@gmail.com to take ticket.
+            }
+            console.log('quick reply: ', messagingEvent.message.quick_reply)
+          } else if (messagingEvent.message) {
             processMessageFromPage(messagingEvent);
-          } else if (userState[messagingEvent.sender.id] === 'Map') {
-
+          } else {
+            console.log('[app.post] not prepared to handle this message type.');
           }
-          delete userState[messagingEvent.sender.id];
-        } else if (messagingEvent.message.quick_reply) {
-          if (messagingEvent.message.quick_reply.payload.includes(',')) {
-            processMessageFromPage(messagingEvent, messagingEvent.message.quick_reply.payload);
-          } else if (messagingEvent.message.quick_reply.payload === 'FIND') {
-            userState[messagingEvent.sender.id] = messagingEvent.message.quick_reply.payload;
-            sendTextMessage(messagingEvent.sender.id, "What would you like to find?")
-          } else if (messagingEvent.message.quick_reply.payload === 'MAP') {
-            map.sendMapOptionsAsQuickReplies(messagingEvent.sender.id);
-          } else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
-
-          } else if (messagingEvent.message.quick_reply.payload === 'CALL') {
-            sendTextMessage(messagingEvent.sender.id, "A target representative has been notified.")
-            //send email to jykim16@gmail.com to take ticket.
-          }
-          console.log('quick reply: ', messagingEvent.message.quick_reply)
-				} else if (messagingEvent.message) {
-					processMessageFromPage(messagingEvent);
-        } else {
-					console.log('[app.post] not prepared to handle this message type.');
-				}
+        }
 			});
 		});
 	}
@@ -262,6 +253,7 @@ function processMessageFromPage(event, payload) {
             console.log('countWord: ', countWord)
           } else {
             var reply = "I can't seem to find that item. Let me try to get a target representative to help you!"
+            sendTextMessage(senderID, reply);
             //employee.sendEmployeeOptionsAsQuickReplies(senderID);
           }
         } else if (intent === 'show map') {
