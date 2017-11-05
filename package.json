@@ -19,6 +19,7 @@
     "express": "^4.16.2",
     "mailgun-js": "^0.13.1",
     "node-wit": "^4.3.0",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "twilio": "^3.9.2"
   }
 }

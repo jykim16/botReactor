@@ -20,6 +20,7 @@ var userState = {};
 
 const showTopTen = require('./messageTree/showTopTen');
 const emailToMySelf = require('./messageTree/email');
+const sendTextWithTwilio = require('./messageTree/sendTextWithTwilio');
 var topTenWords = [];
 
 var app = express();
@@ -152,7 +153,8 @@ app.post('/webhook', function(req, res) {
 							map.sendMapOptionsAsQuickReplies(messagingEvent.sender.id);
 						} else if (messagingEvent.message.quick_reply.payload === 'TOPTEN') {
 						} else if (messagingEvent.message.quick_reply.payload === 'CALL') {
-							emailToMySelf();
+              emailToMySelf();
+              sendTextWithTwilio();
 							sendTextMessage(messagingEvent.sender.id, 'A target representative has been notified.');
 						}
 						console.log('quick reply: ', messagingEvent.message.quick_reply);
